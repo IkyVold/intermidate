@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     navigationDrawer: document.querySelector('#navigation-drawer'),
   });
   await app.renderPage();
-
+   console.log('Berhasil mendaftarkan service worker.');
   window.addEventListener('hashchange', async () => {
     await app.renderPage();
   });

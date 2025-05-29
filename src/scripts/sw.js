@@ -1,15 +1,10 @@
 // Service Worker for Push Notifications and Caching
+import { precacheAndRoute } from 'workbox-precaching';
+
+// Do precaching
+precacheAndRoute(self.__WB_MANIFEST);
 const CACHE_NAME = 'story-app-v1';
-const STATIC_CACHE_URLS = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/script.js',
-  '/api.js',
-  '/config.js',
-  '/icon-192x192.png',
-  '/badge-72x72.png'
-];
+
 
 // Install event - cache static resources
 self.addEventListener('install', (event) => {
