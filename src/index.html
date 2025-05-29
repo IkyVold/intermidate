@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="favicon.png">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Your other CSS files -->
+  
+    
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <title>App</title>
+  </head>
+  <body>
+    <a href="#" class="skip-link">Skip to content</a>
+    <header>
+      <div class="main-header container">
+        <a class="brand-name" href="#/">App</a>
+
+        <nav id="navigation-drawer" class="navigation-drawer">
+          <ul id="nav-list" class="nav-list">
+            <li><a href="#/login">Login</a></li>
+            <li><a href="#/register">Register</a></li>
+          </ul>
+        </nav>
+
+        <button id="drawer-button" class="drawer-button">☰</button>
+      </div>
+    </header>
+
+    <main id="main-content" class="main-content container" tabindex="-1">
+      <h1>Welcome to the App</h1>
+      <p>This is the main content area. When you use the "Skip to content" link, you'll be brought directly here, bypassing the navigation.</p>
+      <p>The skip link is now properly implemented to focus on this main content area without causing page refreshes in your SPA.</p>
+    </main>
+    
+    <footer>
+      <div class="container">
+        <p>&copy; 2025 Project Mas Dicky.</p>
+        <nav aria-label="Footer Navigation">
+        </nav>
+      </div>
+    </footer>
+
+    <script>
+      // Skip to content functionality
+      const mainContent = document.querySelector('#main-content');
+      const skipLink = document.querySelector('.skip-link');
+      
+      skipLink.addEventListener('click', function (event) {
+        event.preventDefault(); // Prevent page refresh
+        skipLink.blur(); // Remove focus from skip link
+        mainContent.focus(); // Focus on main content
+        mainContent.scrollIntoView({ behavior: 'smooth' }); // Smooth scroll to main content
+      });
+
+      // Optional: Handle drawer button for mobile navigation
+      const drawerButton = document.querySelector('#drawer-button');
+      const navigationDrawer = document.querySelector('#navigation-drawer');
+      
+      if (drawerButton && navigationDrawer) {
+        drawerButton.addEventListener('click', function() {
+          const isVisible = navigationDrawer.style.display === 'block';
+          navigationDrawer.style.display = isVisible ? 'none' : 'block';
+        });
+      }
+    </script>
+  </body>
+</html>
