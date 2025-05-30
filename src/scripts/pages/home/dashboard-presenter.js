@@ -1,4 +1,4 @@
-import { getAllStories, getAllStoriesWithLocation } from '../../data/api.js';
+import { getAllStories, getAllStoriesWithLocation, getStoryDetail } from '../../data/api.js';
 
 const DashboardPresenter = {
   async getAllStories() {
@@ -7,6 +7,10 @@ const DashboardPresenter = {
   
   async getAllStoriesWithLocation() {
     return await getAllStoriesWithLocation();
+  },
+  
+  async getStoryDetail(id) {
+    return await getStoryDetail(id);
   }
 };
 

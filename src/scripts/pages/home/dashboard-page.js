@@ -59,6 +59,29 @@ export default class DashboardPage {
           </div>
         </div>
 
+        <!-- Story Detail Modal -->
+        <div id="story-detail-modal" class="modal" style="display: none;">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>Story Details</h3>
+              <span class="close" id="close-story-modal">×</span>
+            </div>
+            <div class="modal-body" id="story-detail-content">
+              <div class="loading" style="display: none;">
+                <div class="loading-spinner"></div>
+                <span>Loading story details...</span>
+              </div>
+              <div id="story-detail-error" class="error-container" style="display: none;">
+                <div class="error-message">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <span id="story-error-text"></span>
+                </div>
+              </div>
+              <div id="story-detail-data" style="display: none;"></div>
+            </div>
+          </div>
+        </div>
+
         <form id="story-form" class="auth-form">
           <a href="#/add-story" class="btn-add-story">Add Story</a>
         </form>
@@ -102,7 +125,7 @@ export default class DashboardPage {
         </div>
       </section>
 
-      <style>
+     <style>
         .container {
           max-width: 1200px;
           margin: 0 auto;
@@ -305,35 +328,45 @@ export default class DashboardPage {
           width: 100%;
           height: 100%;
           background-color: rgba(0,0,0,0.5);
+          overflow-y: auto;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem;
+          box-sizing: border-box;
         }
         
         .modal-content {
           background-color: #fefefe;
-          margin: 10% auto;
+          margin: 0 auto;
           padding: 0;
           border-radius: 0.75rem;
-          width: 90%;
-          max-width: 500px;
+          width: 100%;
+          max-width: 600px;
           box-shadow: 0 0.5rem 2rem rgba(34, 39, 46, 0.15);
+          max-height: 90vh;
+          display: flex;
+          flex-direction: column;
         }
         
         .modal-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 1.5rem;
+          padding: 1rem;
           border-bottom: 1px solid #e3e6f0;
+          flex-shrink: 0;
         }
         
         .modal-header h3 {
           margin: 0;
-          font-size: 1.25rem;
+          font-size: clamp(1rem, 4vw, 1.25rem);
           color: #333;
         }
         
         .close {
           color: #aaa;
-          font-size: 1.5rem;
+          font-size: clamp(1.2rem, 4vw, 1.5rem);
           font-weight: bold;
           cursor: pointer;
         }
@@ -343,7 +376,36 @@ export default class DashboardPage {
         }
         
         .modal-body {
-          padding: 1.5rem;
+          padding: 1rem;
+          flex-grow: 1;
+          overflow-y: auto;
+        }
+        
+        .modal-body img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 0.5rem;
+          margin-bottom: 1rem;
+          display: block;
+        }
+        
+        .modal-body p {
+          margin: 0 0 0.75rem;
+          font-size: clamp(0.85rem, 3vw, 0.95rem);
+          line-height: 1.5;
+          color: #333;
+        }
+        
+        .modal-body p strong {
+          color: #333;
+          font-weight: 600;
+        }
+        
+        #story-detail-map {
+          width: 100%;
+          height: 200px;
+          border-radius: 0.5rem;
+          margin-top: 1rem;
         }
         
         .notification-status {
@@ -432,6 +494,13 @@ export default class DashboardPage {
         .btn-sm {
           padding: 0.25rem 0.5rem;
           font-size: 0.875rem;
+        }
+        
+        .btn-details {
+          margin-top: 1rem;
+          width: 100%;
+          text-align: center;
+          font-size: clamp(0.85rem, 3vw, 0.95rem);
         }
         
         /* Loading Styles */
@@ -526,8 +595,8 @@ export default class DashboardPage {
           }
           
           .modal-content {
-            margin: 5% auto;
             width: 95%;
+            max-height: 85vh;
           }
           
           .notification-actions {
@@ -538,6 +607,11 @@ export default class DashboardPage {
             bottom: 1rem;
             right: 1rem;
             left: 1rem;
+            max-width: calc(100% - 2rem);
+          }
+          
+          #story-detail-map {
+            height: 150px;
           }
         }
         
@@ -547,16 +621,53 @@ export default class DashboardPage {
           }
           
           .dashboard-title {
-            font-size: 1.75rem;
+            font-size: clamp(1.5rem, 5vw, 1.75rem);
           }
           
           .stories-heading {
-            font-size: 1.5rem;
+            font-size: clamp(1.25rem, 4vw, 1.5rem);
           }
           
           .map-container {
             height: 350px;
           }
+          
+          .modal-content {
+            width: 90%;
+            max-height: 80vh;
+          }
+          
+          .modal-body {
+            padding: 0.75rem;
+          }
+          
+          #story-detail-map {
+            height: 120px;
+          }
+          
+          .modal-body img {
+            margin-bottom: 0.5rem;
+          }
+          
+          .btn-details {
+            padding: 0.4rem 0.8rem;
+          }
+        }
+
+        .view-detail-btn {
+          background-color: #36b9cc;
+          color: white;
+          padding: 0.5rem 1rem;
+          border-radius: 0.5rem;
+          text-decoration: none;
+          font-weight: 500;
+          transition: background-color 0.3s ease;
+          margin-top: 0.5rem;
+          display: inline-block;
+        }
+        
+        .view-detail-btn:hover {
+          background-color: #2c9faf;
         }
       </style>
     `;
@@ -623,24 +734,29 @@ export default class DashboardPage {
     });
     
     const notificationBtn = document.getElementById('notification-settings-btn');
-    const modal = document.getElementById('notification-modal');
+    const notificationModal = document.getElementById('notification-modal');
     const closeModal = document.getElementById('close-modal');
     const enableBtn = document.getElementById('enable-notifications');
     const disableBtn = document.getElementById('disable-notifications');
     const testBtn = document.getElementById('test-notification');
     const retryBtn = document.getElementById('retry-btn');
+    const closeStoryModal = document.getElementById('close-story-modal');
+    const storyModal = document.getElementById('story-detail-modal');
     
     notificationBtn.addEventListener('click', () => {
       this.showNotificationModal();
     });
     
     closeModal.addEventListener('click', () => {
-      modal.style.display = 'none';
+      notificationModal.style.display = 'none';
     });
     
     window.addEventListener('click', (event) => {
-      if (event.target === modal) {
-        modal.style.display = 'none';
+      if (event.target === notificationModal) {
+        notificationModal.style.display = 'none';
+      }
+      if (event.target === storyModal) {
+        storyModal.style.display = 'none';
       }
     });
     
@@ -659,6 +775,67 @@ export default class DashboardPage {
     retryBtn.addEventListener('click', () => {
       this.loadStories();
     });
+    
+    closeStoryModal.addEventListener('click', () => {
+      storyModal.style.display = 'none';
+    });
+    
+    document.getElementById('story-list').addEventListener('click', async (event) => {
+      if (event.target.classList.contains('view-detail-btn')) {
+        const storyId = event.target.dataset.storyId;
+        await this.showStoryDetail(storyId);
+      }
+    });
+  }
+  
+  async showStoryDetail(storyId) {
+    const modal = document.getElementById('story-detail-modal');
+    const content = document.getElementById('story-detail-content');
+    const errorContainer = document.getElementById('story-detail-error');
+    const errorText = document.getElementById('story-error-text');
+    const dataContainer = document.getElementById('story-detail-data');
+    const loading = content.querySelector('.loading');
+
+    loading.style.display = 'flex';
+    errorContainer.style.display = 'none';
+    dataContainer.style.display = 'none';
+    modal.style.display = 'block';
+
+    try {
+      const result = await DashboardPresenter.getStoryDetail(storyId);
+      
+      loading.style.display = 'none';
+      
+      if (result.error) {
+        errorText.textContent = result.message || 'Failed to load story details.';
+        errorContainer.style.display = 'block';
+        return;
+      }
+
+      const story = result.story;
+      dataContainer.innerHTML = `
+        <img 
+          src="${story.photoUrl}" 
+          alt="${story.name}" 
+          class="story-detail-image"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=Image+Not+Found';"
+        />
+        <h3 class="story-detail-title">${story.name}</h3>
+        <p class="story-detail-description">${story.description}</p>
+        <p class="story-detail-meta">Created: ${new Date(story.createdAt).toLocaleDateString()}</p>
+        ${story.lat && story.lon ? 
+          `<p class="story-detail-location">
+            <i class="fas fa-map-marker-alt"></i>
+            Location: ${story.lat.toFixed(4)}, ${story.lon.toFixed(4)}
+          </p>` : ''}
+      `;
+      dataContainer.style.display = 'block';
+    } catch (error) {
+      console.error('Error fetching story details:', error);
+      loading.style.display = 'none';
+      errorText.textContent = 'Failed to load story details. Please try again.';
+      errorContainer.style.display = 'block';
+    }
   }
   
   showNotificationModal() {
@@ -841,6 +1018,7 @@ export default class DashboardPage {
               <span>By ${story.name}</span>
               <span>${new Date(story.createdAt).toLocaleDateString()}</span>
             </div>
+            <a href="javascript:void(0)" class="view-detail-btn" data-story-id="${story.id}">View Detail</a>
           </div>
         </div>
       `).join('');

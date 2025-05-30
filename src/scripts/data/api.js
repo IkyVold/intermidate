@@ -6,6 +6,7 @@ const ENDPOINTS = {
   STORIES: `${CONFIG.BASE_URL}/stories`,
   STORIES_WITH_LOCATION: `${CONFIG.BASE_URL}/stories?location=1`,
   NOTIFICATIONS_SUBSCRIBE: `${CONFIG.BASE_URL}/notifications/subscribe`,
+  STORY_DETAIL: (id) => `${CONFIG.BASE_URL}/stories/${id}`,
 };
 
 const VAPID_PUBLIC_KEY = 'BCCs2eonMI-6H2ctvFaWg-UYdDv387Vno_bzUzALpB442r2lCnsHmtrx8biyPi_E-1fSGABK_Qs_GlvPoJJqxbk';
@@ -208,6 +209,18 @@ export async function getAllStoriesWithLocation() {
   });
 }
 
+export async function getStoryDetail(id) {
+  const token = getAuthToken();
+  if (!token) {
+    return { error: true, message: 'Unauthorized. Please login.' };
+  }
+
+  return await apiRequest(ENDPOINTS.STORY_DETAIL(id), {
+    method: 'GET',
+    headers: createAuthHeaders(),
+  });
+}
+
 export async function addNewStory({ description, photo, audioRecording = null, lat = null, lon = null }) {
   const token = getAuthToken();
   if (!token) {
@@ -245,7 +258,6 @@ export async function addNewStory({ description, photo, audioRecording = null, l
       };
     }
     
-    // Tambahkan pengecekan status notifikasi sebelum mengirim notifikasi
     if (result && !result.error && await isPushNotificationEnabled()) {
       await sendPushNotification(
         'Story berhasil dibuat',
@@ -295,16 +307,16 @@ export async function unsubscribeFromPush() {
     if (registration) {
       const subscription = await registration.pushManager.getSubscription();
       if (subscription) {
-        await subscription.unsubscribe(); // Batalkan langganan di client
+        await subscription.unsubscribe();
         const token = getAuthToken();
         if (token) {
           await apiRequest(ENDPOINTS.NOTIFICATIONS_SUBSCRIBE, {
             method: 'DELETE',
             headers: createAuthHeaders(),
             body: JSON.stringify({ endpoint: subscription.endpoint })
-          }); // Batalkan langganan di server
+          });
         }
-        localStorage.removeItem('pushSubscription'); // Hapus dari localStorage
+        localStorage.removeItem('pushSubscription');
         return { success: true };
       }
     }
