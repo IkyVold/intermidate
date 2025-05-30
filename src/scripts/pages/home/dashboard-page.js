@@ -15,6 +15,7 @@ export default class DashboardPage {
       enabled: false,
       permission: 'default'
     };
+    this.bookmarkedStories = JSON.parse(localStorage.getItem('bookmarkedStories')) || [];
   }
 
   async render() {
@@ -29,6 +30,10 @@ export default class DashboardPage {
               <i class="fas fa-bell"></i>
               <span>Notifications</span>
             </button>
+            <a href="#/bookmarks" class="bookmark-btn">
+              <i class="fas fa-bookmark"></i>
+              <span>Bookmarks</span>
+            </a>
           </div>
         </div>
 
@@ -150,7 +155,7 @@ export default class DashboardPage {
           gap: 1rem;
         }
         
-        .notification-btn {
+        .notification-btn, .bookmark-btn {
           display: flex;
           align-items: center;
           gap: 0.5rem;
@@ -161,9 +166,10 @@ export default class DashboardPage {
           cursor: pointer;
           font-weight: 500;
           transition: all 0.2s ease;
+          text-decoration: none;
         }
         
-        .notification-btn:hover {
+        .notification-btn:hover, .bookmark-btn:hover {
           background-color: #eaecf4;
         }
         
@@ -171,6 +177,12 @@ export default class DashboardPage {
           background-color: #1cc88a;
           color: white;
           border-color: #1cc88a;
+        }
+        
+        .bookmark-btn.active {
+          background-color: #f1c40f;
+          color: white;
+          border-color: #f1c40f;
         }
         
         .auth-form {
@@ -317,6 +329,24 @@ export default class DashboardPage {
         .location-badge i {
           margin-right: 0.25rem;
           font-size: 0.9rem;
+        }
+        
+        .bookmark-toggle {
+          background: none;
+          border: none;
+          color: #f1c40f;
+          font-size: 1.2rem;
+          cursor: pointer;
+          padding: 0.5rem;
+          transition: all 0.2s ease;
+        }
+        
+        .bookmark-toggle.bookmarked {
+          color: #d4a017;
+        }
+        
+        .bookmark-toggle:hover {
+          transform: scale(1.2);
         }
         
         /* Modal Styles */
@@ -516,7 +546,7 @@ export default class DashboardPage {
         .loading-spinner {
           width: 24px;
           height: 24px;
-          border: 3px solid #f3f3f3;
+          border: 3px solid #f3f3f0;
           border-top: 3px solid #4e73df;
           border-radius: 50%;
           animation: spin 1s linear infinite;
@@ -785,7 +815,28 @@ export default class DashboardPage {
         const storyId = event.target.dataset.storyId;
         await this.showStoryDetail(storyId);
       }
+      if (event.target.classList.contains('bookmark-toggle')) {
+        const storyId = event.target.dataset.storyId;
+        this.toggleBookmark(storyId);
+      }
     });
+  }
+  
+  toggleBookmark(storyId) {
+    const story = this.stories.find(s => s.id === storyId);
+    if (!story) return;
+
+    const index = this.bookmarkedStories.findIndex(s => s.id === storyId);
+    if (index === -1) {
+      this.bookmarkedStories.push(story);
+      this.showToast('Story bookmarked!', 'success');
+    } else {
+      this.bookmarkedStories.splice(index, 1);
+      this.showToast('Story removed from bookmarks!', 'info');
+    }
+    
+    localStorage.setItem('bookmarkedStories', JSON.stringify(this.bookmarkedStories));
+    this.loadStories(); // Refresh the display to update bookmark icons
   }
   
   async showStoryDetail(storyId) {
@@ -813,6 +864,7 @@ export default class DashboardPage {
       }
 
       const story = result.story;
+      const isBookmarked = this.bookmarkedStories.some(s => s.id === storyId);
       dataContainer.innerHTML = `
         <img 
           src="${story.photoUrl}" 
@@ -828,8 +880,17 @@ export default class DashboardPage {
             <i class="fas fa-map-marker-alt"></i>
             Location: ${story.lat.toFixed(4)}, ${story.lon.toFixed(4)}
           </p>` : ''}
+        <button class="bookmark-toggle btn ${isBookmarked ? 'bookmarked' : ''}" data-story-id="${story.id}">
+          <i class="fas fa-bookmark"></i> ${isBookmarked ? 'Remove Bookmark' : 'Bookmark'}
+        </button>
       `;
       dataContainer.style.display = 'block';
+
+      // Add event listener for bookmark button in modal
+      dataContainer.querySelector('.bookmark-toggle').addEventListener('click', () => {
+        this.toggleBookmark(storyId);
+        this.showStoryDetail(storyId); // Refresh modal
+      });
     } catch (error) {
       console.error('Error fetching story details:', error);
       loading.style.display = 'none';
@@ -999,29 +1060,37 @@ export default class DashboardPage {
         return;
       }
       
-      storyList.innerHTML = stories.map((story) => `
-        <div class="story-card">
-          <img 
-            src="${story.photoUrl}" 
-            alt="${story.name}" 
-            class="story-image" 
-            onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=Image+Not+Found';"
-          />
-          <div class="story-content">
-            <h3 class="story-title">${story.name}</h3>
-            <p class="story-description">${story.description}</p>
-            ${story.lat && story.lon ? 
-              `<div class="location-badge">
-                <i class="fas fa-map-marker-alt"></i> Has Location
-              </div>` : ''}
-            <div class="story-footer">
-              <span>By ${story.name}</span>
-              <span>${new Date(story.createdAt).toLocaleDateString()}</span>
+      storyList.innerHTML = stories.map((story) => {
+        const isBookmarked = this.bookmarkedStories.some(s => s.id === story.id);
+        return `
+          <div class="story-card">
+            <img 
+              src="${story.photoUrl}" 
+              alt="${story.name}" 
+              class="story-image" 
+              onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=Image+Not+Found';"
+            />
+            <div class="story-content">
+              <h3 class="story-title">${story.name}</h3>
+              <p class="story-description">${story.description}</p>
+              ${story.lat && story.lon ? 
+                `<div class="location-badge">
+                  <i class="fas fa-map-marker-alt"></i> Has Location
+                </div>` : ''}
+              <div class="story-footer">
+                <span>By ${story.name}</span>
+                <div>
+                  <button class="bookmark-toggle ${isBookmarked ? 'bookmarked' : ''}" data-story-id="${story.id}">
+                    <i class="fas fa-bookmark"></i>
+                  </button>
+                  <span>${new Date(story.createdAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+              <a href="javascript:void(0)" class="view-detail-btn" data-story-id="${story.id}">View Detail</a>
             </div>
-            <a href="javascript:void(0)" class="view-detail-btn" data-story-id="${story.id}">View Detail</a>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
       
       this.stories = stories;
       
